@@ -4,7 +4,6 @@ from tkinter import *
 mainWindow = Tk()
 mainWindow.title('Extron Python Training')
 
-# opening file
 labels = [1, 2, 3, 4, 5, 6]
 scales = [1, 2, 3, 4, 5, 6]
 
