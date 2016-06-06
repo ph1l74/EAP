@@ -1,5 +1,5 @@
 from tkinter import *
-import os, json
+import os, json, hashlib, binascii
 
 # making window
 mainWindow = Tk()
@@ -8,19 +8,30 @@ mainWindow.title('Extron Python Training')
 loggedIn = False
 pinCorrect = False
 
+salt = 'salt'
+
 pinStars = ''
 pinEntered = ''
 userID = ''
 newPin = ''
 
-file = open('ex5.ini', 'r')
+file = open('ex6.ini', 'r')
 pinCodes = json.load(file)
+file.close()
 
 # defining reset func
 def resetAll():
     global pinStars, pinEntered
     pinStars = ''
     pinEntered = ''
+
+# encryption func
+def encrypt(pin):
+    pinB = pin.encode(encoding='UTF-8')
+    #saltB = salt.encode(encoding='UTF-8')
+    pinCrypted = hashlib.md5(pinB)
+    #print (" ", pin, "\n", pinB ,"\n", pinCrypted.hexdigest())
+    return pinCrypted.hexdigest()
 
 # defining push func
 def pinTouch(but):
@@ -49,13 +60,13 @@ def pinClear():
 # defining enter func
 def pinEnter():
     global pinEntered, pinStars, userID, pinCodes, loggedIn, pinCorrect, newPin
-    file = open('ex5.ini', 'r')
+    file = open('ex6.ini', 'r')
     pinCodes = json.load(file)
     file.close()
     if loggedIn:
         if pinCorrect:
-            file = open('ex5.ini', 'w')
-            pinCodes[userID] = newPin
+            file = open('ex6.ini', 'w')
+            pinCodes[userID] = str(encrypt(newPin))
             json.dump(pinCodes, file)
             pinLabel.configure(text = 'SAVED')
             userID = ''
@@ -64,13 +75,18 @@ def pinEnter():
             loggedIn = False
             pinCorrect = False
         else:
-            if pinEntered == pinCodes.get(userID):
+            pinCrypted = str(encrypt(pinEntered))
+            print (pinCrypted, '\n', str(pinCodes.get(userID)))
+            if pinCrypted == str(pinCodes.get(userID)):
                 pinCorrect = True
                 pinLabel.configure(text = 'OK')
             else:
                 pinCorrect = False
                 loggedIn = False
-                pinLabel.configure(text = 'WRONG PIN')
+                pinStars = ''
+                pinEntered = ''
+                userID = ''
+                newPin = ''
     else:
         if userID in pinCodes.keys():
             loggedIn = True
@@ -79,7 +95,7 @@ def pinEnter():
             loggedIn = False
             pinLabel.configure(text = 'NOT LOGGED')
             userID = ''
-    resetAll()
+            resetAll()
 
 # defining delete func
 def pinDelete():
@@ -95,7 +111,6 @@ def pinDelete():
     else:
         userID = userID[:-1]
         pinLabel.configure(text = userID)
-
 
 # making label
 pinLabel = Label(mainWindow, relief = 'groove', height=2, width =7)
